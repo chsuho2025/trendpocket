@@ -1,0 +1,11 @@
+{
+  "name": "trend-pocket",
+  "version": "1.0.0",
+  "description": "네이버 블로그 실시간 트렌드 서비스",
+  "dependencies": {
+    "@upstash/redis": "^1.31.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/refresh",
+      "schedule": "0 15 * * *"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/dashboard", "dest": "/dashboard.html" },
+    { "src": "/login", "dest": "/login.html" },
+    { "src": "/terms", "dest": "/terms.html" },
+    { "src": "/privacy", "dest": "/privacy.html" },
+    { "src": "/", "dest": "/index.html" }
+  ]
+}

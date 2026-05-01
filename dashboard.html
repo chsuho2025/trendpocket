@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>트렌드 포켓 — 오늘의 트렌드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #2DB400; --green-dark: #229000; --green-dim: #E8F7E4;
+      --black: #111111; --gray-1: #333333; --gray-2: #555555; --gray-3: #888888;
+      --gray-4: #AAAAAA; --gray-5: #CCCCCC; --gray-6: #F5F5F5;
+      --white: #FFFFFF; --border: #EEEEEE;
+      --error: #E53935; --orange: #FF6D00;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Pretendard', -apple-system, sans-serif;
+      background: var(--gray-6); color: var(--black);
+      -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 16px; font-weight: 800; color: var(--black);
+      display: flex; align-items: center; gap: 6px; text-decoration: none;
+    }
+    .nav-logo-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
+    .nav-right { display: flex; align-items: center; gap: 8px; }
+    .nav-user {
+      font-size: 13px; font-weight: 600; color: var(--gray-3);
+    }
+    .btn-nav {
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Pretendard', sans-serif; border: none;
+      transition: all .15s; text-decoration: none;
+    }
+    .btn-nav-ghost { background: var(--gray-6); color: var(--gray-2); }
+    .btn-nav-ghost:hover { background: var(--border); }
+    .btn-nav-green { background: var(--green); color: var(--white); }
+    .btn-nav-green:hover { background: var(--green-dark); }
+
+    /* ── MAIN ── */
+    .main { max-width: 640px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    /* 헤더 */
+    .page-header { margin-bottom: 20px; }
+    .page-header-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .page-title { font-size: 22px; font-weight: 900; color: var(--black); }
+    .update-time { font-size: 12px; color: var(--gray-4); font-weight: 500; }
+    .page-desc { font-size: 13px; color: var(--gray-3); font-weight: 500; }
+
+    /* 급상승 TOP3 */
+    .rising-section { margin-bottom: 20px; }
+    .section-title {
+      font-size: 13px; font-weight: 700; color: var(--gray-3);
+      margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .rising-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .rising-card {
+      background: var(--white); border-radius: 14px; padding: 16px 14px;
+      cursor: pointer; transition: transform .15s;
+      border: 1px solid var(--border);
+    }
+    .rising-card:hover { transform: translateY(-2px); }
+    .rising-card-rank { font-size: 11px; font-weight: 800; color: var(--green); margin-bottom: 6px; }
+    .rising-card-kw { font-size: 13px; font-weight: 800; color: var(--black); margin-bottom: 8px; line-height: 1.3; }
+    .rising-card-rate {
+      font-size: 12px; font-weight: 700; color: var(--orange);
+    }
+
+    /* 랭킹 리스트 */
+    .rank-list { display: flex; flex-direction: column; gap: 0; }
+    .rank-card {
+      background: var(--white); border-radius: 0; padding: 18px 20px;
+      cursor: pointer; transition: background .1s;
+      border-bottom: 1px solid var(--gray-6);
+      display: flex; align-items: center; gap: 16px;
+      position: relative;
+    }
+    .rank-card:first-child { border-radius: 16px 16px 0 0; }
+    .rank-card:last-child { border-radius: 0 0 16px 16px; border-bottom: none; }
+    .rank-card:only-child { border-radius: 16px; }
+    .rank-card:hover { background: var(--gray-6); }
+    .rank-card.locked { cursor: default; }
+    .rank-card.locked:hover { background: var(--white); }
+
+    .rank-num {
+      font-size: 18px; font-weight: 900; color: var(--gray-5);
+      width: 28px; text-align: center; flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .rank-num.r1 { color: var(--green); }
+    .rank-num.r2 { color: #555; }
+    .rank-num.r3 { color: #888; }
+
+    .rank-body { flex: 1; min-width: 0; }
+    .rank-kw {
+      font-size: 15px; font-weight: 800; color: var(--black);
+      margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .rank-meta { font-size: 12px; color: var(--gray-4); font-weight: 500; }
+    .rank-badges { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .badge {
+      font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px;
+    }
+    .badge-up { background: var(--green-dim); color: var(--green-dark); }
+    .badge-hot { background: #FFF3E0; color: #E65100; }
+    .badge-down { background: #F5F5F5; color: var(--gray-3); }
+    .badge-new { background: #E8EAF6; color: #3949AB; }
+    .badge-meme { background: #F3E5F5; color: #6A1B9A; }
+
+    /* 스파크라인 */
+    .sparkline-wrap { flex-shrink: 0; }
+
+    /* 잠금 오버레이 */
+    .lock-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      align-items: flex-end; justify-content: center;
+    }
+    .lock-overlay.show { display: flex; }
+    .lock-sheet {
+      background: var(--white); border-radius: 24px 24px 0 0;
+      padding: 32px 28px 48px; width: 100%; max-width: 480px;
+      animation: slideUp .3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .lock-handle {
+      width: 36px; height: 4px; background: var(--border); border-radius: 2px;
+      margin: 0 auto 28px;
+    }
+    .lock-icon { font-size: 36px; margin-bottom: 16px; }
+    .lock-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; }
+    .lock-desc { font-size: 15px; color: var(--gray-3); line-height: 1.6; margin-bottom: 28px; font-weight: 500; }
+    .btn-lock-cta {
+      display: block; width: 100%; padding: 15px;
+      background: var(--green); color: var(--white);
+      border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 700; font-family: 'Pretendard', sans-serif;
+      cursor: pointer; text-align: center; text-decoration: none;
+      transition: background .15s; margin-bottom: 12px;
+    }
+    .btn-lock-cta:hover { background: var(--green-dark); }
+    .btn-lock-cancel {
+      display: block; width: 100%; padding: 13px;
+      background: var(--gray-6); color: var(--gray-2);
+      border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; font-family: 'Pretendard', sans-serif;
+      cursor: pointer; text-align: center;
+    }
+
+    /* 모달 */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+      align-items: flex-end; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-sheet {
+      background: var(--white); border-radius: 24px 24px 0 0;
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+      animation: slideUp .3s ease;
+    }
+    .modal-handle-wrap { padding: 16px 24px 0; position: sticky; top: 0; background: var(--white); z-index: 1; }
+    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 0 24px 16px; border-bottom: 1px solid var(--border); }
+    .modal-kw { font-size: 20px; font-weight: 900; color: var(--black); margin-bottom: 6px; }
+    .modal-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--gray-6); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-size: 16px;
+    }
+    .modal-body { padding: 20px 24px 32px; }
+
+    /* 차트 섹션 */
+    .chart-section { margin-bottom: 24px; }
+    .chart-tabs {
+      display: flex; gap: 6px; margin-bottom: 16px;
+    }
+    .chart-tab {
+      padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 700;
+      cursor: pointer; border: none; font-family: 'Pretendard', sans-serif;
+      background: var(--gray-6); color: var(--gray-3); transition: all .15s;
+    }
+    .chart-tab.active { background: var(--black); color: var(--white); }
+    .chart-label { font-size: 12px; font-weight: 700; color: var(--gray-4); margin-bottom: 8px; }
+    .chart-wrap { height: 160px; position: relative; }
+    .chart-no-data {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+      background: var(--gray-6); border-radius: 12px;
+    }
+    .chart-no-data-icon { font-size: 24px; opacity: 0.4; }
+    .chart-no-data-text { font-size: 13px; color: var(--gray-4); font-weight: 600; }
+
+    /* 스탯 */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px; }
+    .stat-card { background: var(--gray-6); border-radius: 12px; padding: 14px; }
+    .stat-label { font-size: 11px; font-weight: 700; color: var(--gray-4); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .stat-value { font-size: 18px; font-weight: 900; color: var(--black); font-variant-numeric: tabular-nums; }
+    .stat-value.up { color: var(--green); }
+    .stat-value.down { color: var(--gray-3); }
+
+    /* 코멘트 */
+    .modal-comment { font-size: 14px; color: var(--gray-2); line-height: 1.7; font-weight: 500; }
+
+    /* 로딩 */
+    .loading-wrap {
+      display: flex; align-items: center; justify-content: center;
+      padding: 60px 0;
+    }
+    .loading-dots { display: flex; gap: 6px; }
+    .loading-dot {
+      width: 8px; height: 8px; background: var(--green); border-radius: 50%;
+      animation: bounce .8s infinite ease-in-out;
+    }
+    .loading-dot:nth-child(2) { animation-delay: .15s; }
+    .loading-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+    /* 비회원 배너 */
+    .guest-banner {
+      background: var(--black); color: var(--white);
+      border-radius: 14px; padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 20px; text-decoration: none;
+      transition: opacity .15s;
+    }
+    .guest-banner:hover { opacity: 0.9; }
+    .guest-banner-icon { font-size: 24px; flex-shrink: 0; }
+    .guest-banner-text h3 { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
+    .guest-banner-text p { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; }
+    .guest-banner-arrow { margin-left: auto; font-size: 18px; opacity: 0.5; }
+
+    /* 광고 슬롯 */
+    .ad-slot {
+      background: var(--gray-6); border: 1px dashed var(--gray-5);
+      border-radius: 12px; padding: 20px;
+      text-align: center; color: var(--gray-4);
+      font-size: 12px; font-weight: 600; margin: 16px 0;
+      min-height: 90px; display: flex; align-items: center; justify-content: center;
+    }
+
+    @media (max-width: 400px) {
+      .rising-grid { grid-template-columns: 1fr 1fr; }
+      .rising-grid .rising-card:last-child { display: none; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    트렌드 포켓
+  </a>
+  <div class="nav-right">
+    <span class="nav-user" id="navUser"></span>
+    <div id="navGuestBtns" style="display:flex;gap:8px;">
+      <a href="/login.html" class="btn-nav btn-nav-ghost">로그인</a>
+      <a href="/login.html?mode=signup" class="btn-nav btn-nav-green">무료 가입</a>
+    </div>
+    <div id="navMemberBtns" style="display:none;">
+      <button class="btn-nav btn-nav-ghost" onclick="handleLogout()">로그아웃</button>
+    </div>
+  </div>
+</nav>
+
+<!-- 잠금 바텀시트 -->
+<div class="lock-overlay" id="lockOverlay" onclick="closeLock(event)">
+  <div class="lock-sheet">
+    <div class="lock-handle"></div>
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">회원만 볼 수 있어요</div>
+    <div class="lock-desc">무료 가입하면 TOP 10 전체와<br>7일 트렌드 그래프를 볼 수 있어요.</div>
+    <a href="/login.html?mode=signup" class="btn-lock-cta">무료로 시작하기</a>
+    <button class="btn-lock-cancel" onclick="closeLock()">나중에 할게요</button>
+  </div>
+</div>
+
+<!-- 상세 모달 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle-wrap">
+      <div class="modal-handle"></div>
+    </div>
+    <div class="modal-header">
+      <div>
+        <div class="modal-kw" id="modalKw"></div>
+        <div class="rank-badges" id="modalBadges"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 차트 탭 -->
+      <div class="chart-section">
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="setChartMode('count')">신규 게시물</button>
+          <button class="chart-tab" onclick="setChartMode('rate')">증가율</button>
+        </div>
+        <div class="chart-label" id="chartLabel">일별 신규 게시물 수</div>
+        <div class="chart-wrap">
+          <canvas id="detailChart"></canvas>
+          <div class="chart-no-data" id="chartNoData" style="display:none;">
+            <div class="chart-no-data-icon">📭</div>
+            <div class="chart-no-data-text">데이터 수집 중이에요</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 스탯 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">누적 게시물</div>
+          <div class="stat-value" id="statTotal">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">오늘 신규</div>
+          <div class="stat-value up" id="statToday">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">전일 대비</div>
+          <div class="stat-value" id="statRate">-</div>
+        </div>
+      </div>
+
+      <!-- 코멘트 -->
+      <div class="modal-comment" id="modalComment"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+  </div>
+
+  <div id="mainContent" style="display:none;">
+    <!-- 비회원 배너 -->
+    <a href="/login.html?mode=signup" class="guest-banner" id="guestBanner" style="display:none;">
+      <div class="guest-banner-icon">✨</div>
+      <div class="guest-banner-text">
+        <h3>가입하면 TOP 10 전체를 무료로 볼 수 있어요</h3>
+        <p>이메일 주소만 있으면 바로 시작 가능해요</p>
+      </div>
+      <div class="guest-banner-arrow">›</div>
+    </a>
+
+    <!-- 페이지 헤더 -->
+    <div class="page-header">
+      <div class="page-header-top">
+        <div class="page-title">오늘의 트렌드</div>
+        <div class="update-time" id="updateTime"></div>
+      </div>
+      <div class="page-desc" id="pageDesc"></div>
+    </div>
+
+    <!-- 급상승 TOP3 -->
+    <div class="rising-section" id="risingSection" style="display:none;">
+      <div class="section-title">🔥 급상승</div>
+      <div class="rising-grid" id="risingGrid"></div>
+    </div>
+
+    <!-- 광고 슬롯 -->
+    <div class="ad-slot" id="adSlot">광고 영역</div>
+
+    <!-- 랭킹 -->
+    <div class="section-title" style="margin-bottom:12px;">TOP 10</div>
+    <div class="rank-list" id="rankList"></div>
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://siquajpcipgplolmiscv.supabase.co';
+  let globalKws = [];
+  let isLoggedIn = false;
+  let currentKw = null;
+  let chartInstance = null;
+  let chartMode = 'count';
+
+  // ── 인증 확인 ──
+  async function checkAuth() {
+    const token = localStorage.getItem('tp_token');
+    if (!token) return false;
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) { localStorage.removeItem('tp_token'); return false; }
+      const data = await res.json();
+      document.getElementById('navUser').textContent = data.email;
+      return true;
+    } catch { return false; }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('tp_token');
+    location.reload();
+  }
+
+  // ── 데이터 로드 ──
+  async function loadData() {
+    try {
+      const token = localStorage.getItem('tp_token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const res = await fetch('/api/data', { headers });
+      if (!res.ok) throw new Error('데이터 로드 실패');
+      return await res.json();
+    } catch(e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  // ── 렌더링 ──
+  function formatNum(n) {
+    if (!n && n !== 0) return '-';
+    if (n >= 10000) return (n/10000).toFixed(1) + '만';
+    if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+    return n.toLocaleString();
+  }
+
+  function sparklineSVG(values, w=64, h=28) {
+    if (!values || values.length < 2) return '';
+    const pts = values.slice(-7);
+    const max = Math.max(...pts, 1);
+    const min = Math.min(...pts, 0);
+    const range = max - min || 1;
+    const coords = pts.map((v, i) => {
+      const x = (i / (pts.length - 1)) * w;
+      const y = h - ((v - min) / range) * (h - 4) - 2;
+      return `${x},${y}`;
+    }).join(' ');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+      <polyline points="${coords}" fill="none" stroke="#2DB400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
+  function buildBadges(kw) {
+    const badges = [];
+    if (kw.isMemetic) badges.push('<span class="badge badge-meme">💬 신조어</span>');
+    if (kw.trend === '급상승') badges.push('<span class="badge badge-hot">🔥 급상승</span>');
+    else if (kw.trend === '유행중') badges.push('<span class="badge badge-up">📈 유행중</span>');
+    else if (kw.trend === '하락세') badges.push('<span class="badge badge-down">📉 하락세</span>');
+    if (kw.isNew) badges.push('<span class="badge badge-new">NEW</span>');
+    return badges.join('');
+  }
+
+  function renderRising(kws) {
+    const rising = kws.filter(k => k.changeRate > 0).sort((a,b) => b.changeRate - a.changeRate).slice(0, 3);
+    if (!rising.length) return;
+    document.getElementById('risingSection').style.display = 'block';
+    document.getElementById('risingGrid').innerHTML = rising.map((k, i) => `
+      <div class="rising-card" onclick="openModal('${k.keyword.replace(/'/g,"\\'")}')">
+        <div class="rising-card-rank">${['🥇','🥈','🥉'][i]} ${i+1}위</div>
+        <div class="rising-card-kw">${k.keyword}</div>
+        <div class="rising-card-rate">+${Math.round(k.changeRate)}%</div>
+      </div>
+    `).join('');
+  }
+
+  function renderRankList(kws, loggedIn) {
+    const list = document.getElementById('rankList');
+    const showCount = loggedIn ? kws.length : 3;
+
+    list.innerHTML = kws.slice(0, showCount).map((k, i) => `
+      <div class="rank-card" onclick="openModal('${k.keyword.replace(/'/g,"\\'")}')">
+        <div class="rank-num ${i < 3 ? 'r'+(i+1) : ''}">${i+1}</div>
+        <div class="rank-body">
+          <div class="rank-kw">${k.keyword}</div>
+          <div class="rank-meta">오늘 신규 ${formatNum(k.todayNew || 0)}개 · ${k.postCount ? '누적 '+formatNum(k.postCount) : ''}</div>
+          <div class="rank-badges">${buildBadges(k)}</div>
+        </div>
+        <div class="sparkline-wrap">${sparklineSVG(k.postValues)}</div>
+      </div>
+    `).join('');
+
+    // 비회원 잠금 카드
+    if (!loggedIn && kws.length > 3) {
+      list.innerHTML += `
+        <div class="rank-card locked" onclick="showLock()">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 0;color:var(--gray-4);font-size:14px;font-weight:600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            4위~10위는 로그인 후 확인하세요
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // ── 모달 ──
+  function openModal(keyword) {
+    if (!isLoggedIn) { showLock(); return; }
+    const kw = globalKws.find(k => k.keyword === keyword);
+    if (!kw) return;
+    currentKw = kw;
+    chartMode = 'count';
+    document.querySelectorAll('.chart-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+
+    document.getElementById('modalKw').textContent = kw.keyword;
+    document.getElementById('modalBadges').innerHTML = buildBadges(kw);
+    document.getElementById('modalComment').textContent = kw.comment || '';
+    document.getElementById('statTotal').textContent = formatNum(kw.postCount);
+    document.getElementById('statToday').textContent = kw.todayNew ? '+' + formatNum(kw.todayNew) : '-';
+    const rate = kw.todayRate;
+    const rateEl = document.getElementById('statRate');
+    rateEl.textContent = rate != null ? (rate > 0 ? '+' : '') + Math.round(rate) + '%' : '-';
+    rateEl.className = 'stat-value ' + (rate > 0 ? 'up' : rate < 0 ? 'down' : '');
+
+    drawChart(kw, chartMode);
+    document.getElementById('modalOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('modalOverlay')) return;
+    document.getElementById('modalOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  }
+
+  function setChartMode(mode) {
+    chartMode = mode;
+    document.querySelectorAll('.chart-tab').forEach((t, i) => t.classList.toggle('active', (i===0 && mode==='count') || (i===1 && mode==='rate')));
+    document.getElementById('chartLabel').textContent = mode === 'count' ? '일별 신규 게시물 수' : '전일 대비 증가율 (%)';
+    if (currentKw) drawChart(currentKw, mode);
+  }
+
+  function drawChart(kw, mode) {
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    const noData = document.getElementById('chartNoData');
+    const canvas = document.getElementById('detailChart');
+
+    const values = mode === 'count' ? (kw.postValues || []) : (kw.rateValues || []);
+    const hasData = values && values.some(v => v != null && v !== 0);
+
+    if (!hasData) {
+      noData.style.display = 'flex'; canvas.style.display = 'none'; return;
+    }
+    noData.style.display = 'none'; canvas.style.display = 'block';
+
+    const days = values.length;
+    const labels = Array.from({length: days}, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (days - 1 - i));
+      return (d.getMonth()+1) + '/' + d.getDate();
+    });
+
+    const ctx = canvas.getContext('2d');
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{
+        data: values,
+        borderColor: '#2DB400',
+        backgroundColor: (ctx) => {
+          const {ctx: c, chartArea} = ctx.chart;
+          if (!chartArea) return 'rgba(45,180,0,0.08)';
+          const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          g.addColorStop(0, 'rgba(45,180,0,0.18)');
+          g.addColorStop(1, 'rgba(45,180,0,0.01)');
+          return g;
+        },
+        borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4,
+        tension: 0.35, fill: true, spanGaps: true,
+      }]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 300 },
+        layout: { padding: { top: 8 } },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(17,17,17,0.9)', borderColor: 'transparent',
+            titleColor: '#fff', bodyColor: 'rgba(255,255,255,0.7)',
+            titleFont: { family: 'Pretendard', size: 12, weight: '700' },
+            bodyFont: { family: 'Pretendard', size: 11 },
+            padding: 10, cornerRadius: 8,
+            callbacks: {
+              label: ctx => mode === 'count'
+                ? `신규 ${ctx.parsed.y.toLocaleString()}개`
+                : `증가율 ${ctx.parsed.y > 0 ? '+' : ''}${Math.round(ctx.parsed.y)}%`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#BBB', font: { size: 10, family: 'Pretendard' }, maxTicksLimit: 7 }, border: { color: 'transparent' } },
+          y: { min: 0, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#BBB', font: { size: 10, family: 'Pretendard' }, maxTicksLimit: 4 }, border: { display: false } }
+        }
+      }
+    });
+  }
+
+  // ── 잠금 ──
+  function showLock() {
+    document.getElementById('lockOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLock(e) {
+    if (e && e.target !== document.getElementById('lockOverlay')) return;
+    document.getElementById('lockOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // ── 초기화 ──
+  async function init() {
+    isLoggedIn = await checkAuth();
+
+    document.getElementById('navGuestBtns').style.display = isLoggedIn ? 'none' : 'flex';
+    document.getElementById('navMemberBtns').style.display = isLoggedIn ? 'block' : 'none';
+    if (!isLoggedIn) document.getElementById('guestBanner').style.display = 'flex';
+
+    const data = await loadData();
+    document.getElementById('loadingWrap').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+
+    if (!data || !data.keywords || !data.keywords.length) {
+      document.getElementById('rankList').innerHTML = '<div style="padding:40px;text-align:center;color:var(--gray-4);font-size:14px;">데이터를 불러오는 중이에요</div>';
+      return;
+    }
+
+    globalKws = data.keywords;
+
+    // 업데이트 시간
+    if (data.updatedAt) {
+      const d = new Date(data.updatedAt);
+      document.getElementById('updateTime').textContent = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}시 업데이트`;
+    }
+    document.getElementById('pageDesc').textContent = `네이버 블로그 ${data.totalCollected ? data.totalCollected.toLocaleString() + '개' : '수천 개'} 분석`;
+
+    renderRising(globalKws);
+    renderRankList(globalKws, isLoggedIn);
+  }
+
+  // ESC 키
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeLock(); }
+  });
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인정보처리방침 — 트렌드 포켓</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --black: #111; --gray-2: #555; --gray-3: #888; --gray-6: #F5F5F5; --border: #EEE; --green: #2DB400; }
+    body { font-family: 'Pretendard', sans-serif; background: var(--gray-6); color: var(--black); -webkit-font-smoothing: antialiased; }
+    nav { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; }
+    .nav-logo { font-size: 16px; font-weight: 800; color: var(--black); display: flex; align-items: center; gap: 6px; text-decoration: none; }
+    .nav-logo-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
+    .content { max-width: 640px; margin: 0 auto; padding: 40px 24px 80px; }
+    .doc-card { background: #fff; border-radius: 16px; padding: 36px 32px; }
+    h1 { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+    .updated { font-size: 13px; color: var(--gray-3); margin-bottom: 32px; font-weight: 500; }
+    h2 { font-size: 16px; font-weight: 800; margin: 28px 0 10px; }
+    p, li { font-size: 14px; color: var(--gray-2); line-height: 1.8; font-weight: 500; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 4px; }
+    .back { display: inline-flex; align-items: center; gap: 6px; color: var(--gray-3); font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo"><div class="nav-logo-dot"></div>트렌드 포켓</a>
+</nav>
+<div class="content">
+  <a href="/" class="back">← 홈으로</a>
+  <div class="doc-card">
+    <h1>개인정보처리방침</h1>
+    <div class="updated">최종 수정일: 2026년 5월 1일</div>
+
+    <h2>수집하는 개인정보</h2>
+    <ul>
+      <li>이메일 주소 (회원가입 시)</li>
+      <li>비밀번호 (암호화하여 저장)</li>
+      <li>서비스 이용 일시</li>
+    </ul>
+
+    <h2>수집 목적</h2>
+    <ul>
+      <li>회원 식별 및 서비스 제공</li>
+      <li>서비스 이용 관련 공지 발송</li>
+    </ul>
+
+    <h2>보관 기간</h2>
+    <p>회원 탈퇴 시 즉시 삭제합니다. 단, 관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관합니다.</p>
+
+    <h2>제3자 제공</h2>
+    <p>이용자의 개인정보를 제3자에게 제공하지 않습니다.</p>
+
+    <h2>이용자 권리</h2>
+    <ul>
+      <li>개인정보 열람, 수정, 삭제 요청 가능</li>
+      <li>요청은 서비스 내 또는 이메일로 접수</li>
+    </ul>
+
+    <h2>보안</h2>
+    <p>비밀번호는 bcrypt로 암호화하여 저장되며, JWT를 이용한 인증 방식을 사용합니다.</p>
+  </div>
+</div>
+</body>
+</html>
