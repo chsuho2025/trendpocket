@@ -1,6 +1,9 @@
 const { Redis } = require('@upstash/redis');
 
-const redis = Redis.fromEnv();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
 const NAVER_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_SECRET = process.env.NAVER_CLIENT_SECRET;
@@ -45,7 +48,7 @@ async function collectTitles() {
       const data = await res.json();
       if (!data.items) return;
       for (const item of data.items) {
-        const title = item.title.replace(/<[^>]+>/g, '').trim();
+        const title = item.title.replace(/<[^>]+>/g, '').replace(/&quot;/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/&#[0-9]+;/g, '').trim();
         const pubDate = item.postdate || '';
         if (pubDate >= recentStr) {
           recentTitles.push(title);
@@ -70,7 +73,7 @@ function analyzeFrequency(recentTitles, olderTitles, titlesPerKeyword) {
     const freq = {};
     for (const title of titles) {
       const clean = title.replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s]/g, ' ').trim();
-      const words = clean.split(/\s+/).filter(w => w.length >= 2);
+      const words = clean.split(/\s+/).filter(w => w.length >= 3 && !/^[a-zA-Z0-9]+$/.test(w));
       for (const word of words) {
         freq[word] = (freq[word] || 0) + 1;
       }
@@ -93,10 +96,20 @@ function analyzeFrequency(recentTitles, olderTitles, titlesPerKeyword) {
   }
 
   // 급등률 계산
-  const STOP = new Set(['있는', '하는', '이런', '그런', '어떤', '정말', '너무', '진짜', '매우',
+  const STOP = new Set([
+    // 범용어
+    '있는', '하는', '이런', '그런', '어떤', '정말', '너무', '진짜', '매우',
     '아주', '정도', '이번', '오늘', '어제', '지금', '리뷰', '후기', '추천', '소개', '정보',
     '방법', '이유', '가격', '할인', '이벤트', '정리', '공유', '사용', '구매', '신상', '맛집',
-    'BEST', 'TOP', 'No', 'NO']);
+    '좋은', '위한', '일상', '스타일', '브랜드', '총정리', '가볼만한곳', '편한',
+    // HTML 엔티티 잔재
+    'quot', 'amp', 'lt', 'gt', 'nbsp', 'apos',
+    // 날짜/숫자 단독
+    '1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월',
+    '2024', '2025', '2026', '2027',
+    // 영문 불용어
+    'BEST', 'TOP', 'No', 'NO', 'the', 'and',
+  ]);
 
   const candidates = [];
   for (const [word, recentCnt] of Object.entries(recentFreq)) {
